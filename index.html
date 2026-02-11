@@ -3,75 +3,45 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TalentIn Pipeline Redirect</title>
+  <title>TalentIn Pipeline</title>
   <style>
-    :root { color-scheme: dark; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #202124;
-      color: #e8eaed;
+    html, body { margin:0; height:100%; background:#202124; color:#e8eaed; font-family:Roboto,Segoe UI,sans-serif; }
+    #frame { width:100%; height:100%; border:0; display:none; }
+    #loading {
+      position:fixed; inset:0; display:grid; place-items:center; background:#202124;
     }
-    .card {
-      width: min(560px, 92vw);
-      background: #292a2d;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 18px 20px;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
-    }
-    h1 {
-      margin: 0 0 8px;
-      font-size: 20px;
-      font-weight: 600;
-    }
-    p {
-      margin: 6px 0;
-      color: #9aa0a6;
-      line-height: 1.4;
-    }
-    a { color: #8ab4f8; }
+    .card { background:#292a2d; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:18px 20px; }
+    a { color:#8ab4f8; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Opening pipeline report...</h1>
-    <p id="status">Redirecting to web app.</p>
-    <p>If redirect does not start, open <a id="fallback" href="#">this link</a>.</p>
+  <div id="loading">
+    <div class="card">
+      <div>Loading pipeline report…</div>
+      <div style="margin-top:8px;font-size:13px;color:#9aa0a6">
+        If it doesn’t load, <a id="openDirect" href="#" target="_blank" rel="noopener">open directly</a>.
+      </div>
+    </div>
   </div>
+  <iframe id="frame" title="Pipeline report"></iframe>
 
   <script>
-    (function () {
-      // Keep this aligned with your current deployed web app URL.
-      var WEB_APP_BASE = "https://script.google.com/a/talentin.co/macros/s/AKfycbye7Pqqdk1JeDRZ9Q1s5jyxwNFN_wRZUCwJEgZfW1pvNrJMdK13cfBjtLliDU4dl5IS/exec";
+    const WEB_APP_BASE = "https://script.google.com/a/talentin.co/macros/s/AKfycbye7Pqqdk1JeDRZ9Q1s5jyxwNFN_wRZUCwJEgZfW1pvNrJMdK13cfBjtLliDU4dl5IS/exec";
+    const url = new URL(location.href);
+    const target = new URL(WEB_APP_BASE);
 
-      var here = new URL(window.location.href);
-      var target = new URL(WEB_APP_BASE);
+    const jobId = url.searchParams.get("jobId");
+    if (jobId) target.searchParams.set("jobId", jobId);
 
-      // Pass all existing query params through.
-      here.searchParams.forEach(function (value, key) {
-        target.searchParams.append(key, value);
-      });
+    const direct = document.getElementById("openDirect");
+    direct.href = target.toString();
 
-      // Optional path format support: /job/7055538
-      if (!target.searchParams.get("jobId")) {
-        var match = here.pathname.match(/\/job\/(\d+)/i);
-        if (match && match[1]) target.searchParams.set("jobId", match[1]);
-      }
-
-      var fallback = document.getElementById("fallback");
-      var status = document.getElementById("status");
-      var destination = target.toString();
-      fallback.href = destination;
-      status.textContent = target.searchParams.get("jobId")
-        ? "Redirecting to job " + target.searchParams.get("jobId") + "..."
-        : "Redirecting to web app...";
-
-      window.location.replace(destination);
-    })();
+    const frame = document.getElementById("frame");
+    frame.onload = () => {
+      document.getElementById("loading").style.display = "none";
+      frame.style.display = "block";
+    };
+    frame.src = target.toString();
   </script>
 </body>
 </html>
